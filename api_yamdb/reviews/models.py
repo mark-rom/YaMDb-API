@@ -33,6 +33,9 @@ class User(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
+    def __str__(self):
+        return self.username
+
 
 class Genre(models.Model):
     name = models.CharField(max_length=256)
@@ -41,6 +44,9 @@ class Genre(models.Model):
     class Meta:
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
+
+    def __str__(self):
+        return self.name
 
 
 class Category(models.Model):
@@ -51,6 +57,9 @@ class Category(models.Model):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
+    def __str__(self):
+        return self.name
+
 
 class Title(models.Model):
     name = models.TextField()
@@ -58,12 +67,7 @@ class Title(models.Model):
         help_text='Нельзя добавлять произведения, которые еще не вышли'
     )
     description = models.TextField(blank=True)
-    genre = models.ForeignKey(
-        Genre,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='genres'
-    )
+    genre = models.ManyToManyField(Genre, through='TitleGenre')
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -74,6 +78,9 @@ class Title(models.Model):
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
+
+    def __str__(self):
+        return self.name
 
 
 class Review(models.Model):
@@ -126,3 +133,15 @@ class Comment(models.Model):
     class Meta:
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
+
+
+class TitleGenre(models.Model):
+    title_id = models.ForeignKey(Title, on_delete=models.CASCADE)
+    genre_id = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True)
+
+    class Meta:
+        verbose_name = 'Жанр произведения'
+        verbose_name_plural = 'Жанры произведений'
+
+    def __str__(self):
+        return f'{self.title_id} {self.genre_id}'
