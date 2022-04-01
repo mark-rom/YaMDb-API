@@ -66,12 +66,12 @@ class Title(models.Model):
     year = models.IntegerField(
         help_text='Нельзя добавлять произведения, которые еще не вышли'
     )
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, null=True) # Добавил  null=True
     genre = models.ManyToManyField(Genre, through='TitleGenre')
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
-        null=True,
+        null=True, # Добавил  null=True
         related_name='categories'
     )
 
@@ -84,7 +84,7 @@ class Title(models.Model):
 
 
 class Review(models.Model):
-    title_id = models.ForeignKey(
+    title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
         related_name='reviews'
@@ -93,7 +93,7 @@ class Review(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='reviews'
+        related_name='reviews',
     )
     score = models.IntegerField(choices=SCORE_CHOISES)
     pub_date = models.DateTimeField(
@@ -108,12 +108,13 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
-    title_id = models.ForeignKey(
+    title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        related_name='comments'
+        related_name='comments',
+        null=True # Добавил  null=True
     )
-    review_id = models.ForeignKey(
+    review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
         related_name='comments'
@@ -136,12 +137,12 @@ class Comment(models.Model):
 
 
 class TitleGenre(models.Model):
-    title_id = models.ForeignKey(Title, on_delete=models.CASCADE)
-    genre_id = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True)
 
     class Meta:
         verbose_name = 'Жанр произведения'
         verbose_name_plural = 'Жанры произведений'
 
     def __str__(self):
-        return f'{self.title_id} {self.genre_id}'
+        return f'{self.title} {self.genre}'
