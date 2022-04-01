@@ -108,11 +108,6 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
-    title_id = models.ForeignKey(
-        Title,
-        on_delete=models.CASCADE,
-        related_name='comments'
-    )
     review_id = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
