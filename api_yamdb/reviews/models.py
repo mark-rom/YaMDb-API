@@ -94,6 +94,7 @@ class Review(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name='reviews',
+        db_column='author'
     )
     score = models.IntegerField(choices=SCORE_CHOISES)
     pub_date = models.DateTimeField(
@@ -123,7 +124,8 @@ class Comment(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='comments'
+        related_name='comments',
+        db_column='author'
     )
     pub_date = models.DateTimeField(
         'Дата публикации комментария',

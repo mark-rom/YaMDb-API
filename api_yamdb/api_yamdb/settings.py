@@ -1,4 +1,6 @@
 import os
+from datetime import timedelta
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -106,3 +108,27 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
 
 AUTH_USER_MODEL = 'reviews.User'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        # Подключаем JWT-токен (необходим python 3.9)
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    # 'DEFAULT_THROTTLE_CLASSES': [
+    #     'rest_framework.throttling.UserRateThrottle',
+    #     'rest_framework.throttling.AnonRateThrottle',
+    # ],
+    # 'DEFAULT_THROTTLE_RATES': {
+    #     'user': '600/hour',  # Лимит для UserRateThrottle
+    #     'anon': '60/hour',  # Лимит для AnonRateThrottle
+    # }
+}
+
+SIMPLE_JWT = {
+    # Устанавливаем срок жизни токена
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
