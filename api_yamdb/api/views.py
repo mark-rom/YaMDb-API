@@ -1,10 +1,11 @@
 from rest_framework import viewsets, mixins, filters
 from reviews.models import Category, Genre, Title
-from .serializers import CategorySerializer, GenreSerializer
-from .serializers import TitleReadSerializer, TitleWriteSerializer
+from api.serializers import CategorySerializer, GenreSerializer
+from api.serializers import TitleReadSerializer, TitleWriteSerializer
 from django_filters.rest_framework import DjangoFilterBackend
-from .filters import TitleFilterSet
+from api.filters import TitleFilterSet
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 
 class CustomViewSet(
@@ -22,7 +23,7 @@ class CategoryViewSet(CustomViewSet):
     lookup_field = 'slug'
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    # permission_classes = ()
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -34,7 +35,7 @@ class GenreViewSet(CustomViewSet):
     lookup_field = 'slug'
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    # permission_classes = ()
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -46,7 +47,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     Есть фильтр по полям slug категории/жанра, названию, году."""
     queryset = Title.objects.all()
     serializer_class = TitleReadSerializer
-    # permission_classes = ()
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_сlass = TitleFilterSet
