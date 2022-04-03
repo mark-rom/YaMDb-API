@@ -1,7 +1,10 @@
 from rest_framework import viewsets, mixins, filters
 from reviews.models import Category, Genre, Title
-from .serializers import CategorySerializer, GenreSerializer, TitleSerializer
+from .serializers import CategorySerializer, GenreSerializer
+from .serializers import TitleReadSerializer, TitleWriteSerializer
 from django_filters.rest_framework import DjangoFilterBackend
+from .filters import TitleFilterSet
+from rest_framework.pagination import LimitOffsetPagination
 
 
 class CustomViewSet(
@@ -20,7 +23,7 @@ class CategoryViewSet(CustomViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     # permission_classes = ()
-    # pagination_class = ()
+    pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
@@ -32,7 +35,7 @@ class GenreViewSet(CustomViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     # permission_classes = ()
-    # pagination_class = ()
+    pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
@@ -42,8 +45,13 @@ class TitleViewSet(viewsets.ModelViewSet):
     создания, частичного обновления и удаления объектов.
     Есть фильтр по полям slug категории/жанра, названию, году."""
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
+    serializer_class = TitleReadSerializer
     # permission_classes = ()
-    # pagination_class = ()
+    pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
-    # filterset_fields = ('category', 'genre', 'name', 'year')
+    filterset_сlass = TitleFilterSet
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitleReadSerializer
+        return TitleWriteSerializer

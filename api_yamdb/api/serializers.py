@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 from reviews.models import Category, Genre, Title
 from datetime import datetime
+from django.db.models import Avg
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -9,12 +9,6 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = '__all__'
         exclude = ['id']
-        validators = [
-            UniqueValidator(
-                queryset=Category.objects.all(),
-                fields=['slug']
-            )
-        ]
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -22,28 +16,12 @@ class GenreSerializer(serializers.ModelSerializer):
         model = Genre
         fields = '__all__'
         exclude = ['id']
-        validators = [
-            UniqueValidator(
-                queryset=Genre.objects.all(),
-                fields=['slug']
-            )
-        ]
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(
-        read_only=True,
-        queryset=Category.objects.all()
-    )
-    genre = GenreSerializer(
-        read_only=True,
-        many=True,
-        queryset=Genre.objects.all()
-    )
-    rating = serializers.IntegerField(
-        read_only=True,
-        required=False
-    )
+class TitleReadSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    genre = GenreSerializer(read_only=True, many=True)
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Title
@@ -55,6 +33,31 @@ class TitleSerializer(serializers.ModelSerializer):
             'genre',
             'category',
             'rating')
+
+    def get_rating(self, obj):
+        return obj.reviews.all().aggregate(Avg('score'))
+
+
+class TitleWriteSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field='slug'
+    )
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
+        many=True,
+        slug_field='slug'
+    )
+
+    class Meta:
+        model = Title
+        fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+            'genre',
+            'category')
 
     def validate_year(self, value):
         if value > datetime.today().year:

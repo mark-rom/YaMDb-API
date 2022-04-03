@@ -6,10 +6,7 @@ from .models import Category, Comment, Genre, Review, Title, TitleGenre, User
 class UserAdmin(admin.ModelAdmin):
     list_display = [
         'pk',
-<<<<<<< HEAD
-=======
         'username',
->>>>>>> master
         'email',
         'first_name',
         'last_name',
