@@ -1,18 +1,26 @@
 from django.contrib import admin
 
-from .models import Category, Comment, Genre, Review, Title, User
+from .models import Category, Comment, Genre, Review, Title, TitleGenre, User
 
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = (
+    list_display = [
         'pk',
+<<<<<<< HEAD
+=======
+        'username',
+>>>>>>> master
         'email',
         'first_name',
         'last_name',
         'bio',
         'role'
-    )
+    ]
     empty_value_display = '-пусто-'
+
+
+class TitleGenreInline(admin.TabularInline):
+    model = TitleGenre
 
 
 class GenreAdmin(admin.ModelAdmin):
@@ -21,6 +29,7 @@ class GenreAdmin(admin.ModelAdmin):
         'name',
         'slug'
     ]
+    inlines = (TitleGenreInline,)
     empty_value_display = '-пусто-'
 
 
@@ -39,9 +48,9 @@ class TitleAdmin(admin.ModelAdmin):
         'name',
         'year',
         'description',
-        'genre',
         'category'
     ]
+    inlines = (TitleGenreInline,)
     empty_value_display = '-пусто-'
 
 
@@ -60,7 +69,6 @@ class ReviewAdmin(admin.ModelAdmin):
 class CommentAdmin(admin.ModelAdmin):
     list_display = [
         'pk',
-        'title_id',
         'review_id',
         'text',
         'author',
