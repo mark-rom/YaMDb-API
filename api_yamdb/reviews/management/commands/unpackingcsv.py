@@ -5,7 +5,7 @@ import os
 
 from api_yamdb.settings import BASE_DIR
 
-PATH_DIR = os.path.join(BASE_DIR, 'static\data')
+PATH_DIR = os.path.join(BASE_DIR, 'static/data')
 
 PATH_TO_BD = '../api_yamdb/db.sqlite3'
 
@@ -29,7 +29,9 @@ class Command(BaseCommand):
 
         for file in os.listdir(PATH_DIR):
             PATH_TO_FILE = os.path.join(PATH_DIR, file)
-            table_name = CONFORMITY[os.path.splitext(os.path.basename(file))[0]]
+            table_name = CONFORMITY[
+                os.path.splitext(os.path.basename(file))[0]
+            ]
 
             with open(PATH_TO_FILE, 'r', encoding='utf-8') as f_open_csv:
                 rows = csv.DictReader(f_open_csv)
@@ -37,8 +39,12 @@ class Command(BaseCommand):
                 for row in rows:
                     columns = ', '.join(row.keys())
                     placeholders = ', '.join('?' * len(row))
-                    sql = 'INSERT INTO {} ({}) VALUES ({})'.format(table_name, columns, placeholders)
-                    values = [int(x) if x.isnumeric() else x for x in row.values()]
+                    sql = 'INSERT INTO {} ({}) VALUES ({})'.format(
+                        table_name, columns, placeholders
+                    )
+                    values = [
+                        int(x) if x.isnumeric() else x for x in row.values()
+                    ]
                     cur.execute(sql, values)
 
         con.commit()
@@ -50,5 +56,6 @@ class Command(BaseCommand):
         print()
 
 # Что бы скрипт работал пришлось видоизменить CSV файлы
-# comments, reviews, titles поменял author на author_id
-# users добавил is_superuser,is_staff,is_active,date_joined и  по 1 запятой для каждого столбца
+# users добавил is_superuser,is_staff,is_active,date_joined и confirmation_code
+# также необходимо добавить по 1 запятой для каждого столбца
+# Для confirmation_code изза уникальности параметра пришлось прроставить цифры

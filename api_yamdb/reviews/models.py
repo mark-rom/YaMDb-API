@@ -1,6 +1,8 @@
+import uuid
 from django.db import models
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser  # UserManager
 from rest_framework_simplejwt.tokens import RefreshToken
+# from django.core.mail import send_mail
 
 ROLE_CHOISES = (
     ('user', 'user'),
@@ -22,41 +24,6 @@ SCORE_CHOISES = [
 ]
 
 
-class CustomUserManager(BaseUserManager):
-    """
-    Django требует, чтобы кастомные пользователи определяли свой собственный
-    класс Manager. Унаследовавшись от BaseUserManager, мы получаем много того
-    же самого кода, который Django использовал для создания User
-    (для демонстрации).
-    """
-
-    def create_user(self, username, email):
-        """ Создает и возвращает пользователя с имэйлом, паролем и именем. """
-        if username is None:
-            raise TypeError('Users must have a username.')
-
-        if email is None:
-            raise TypeError('Users must have an email address.')
-
-        user = self.model(username=username, email=self.normalize_email(email))
-        # user.set_password(password)
-        user.save()
-
-        return user
-
-    def create_superuser(self, username, email, password):
-        """ Создает и возввращет пользователя с привилегиями суперадмина. """
-        if password is None:
-            raise TypeError('Superusers must have a password.')
-
-        user = self.create_user(username, email, password)
-        user.is_superuser = True
-        user.is_staff = True
-        user.save()
-
-        return user
-
-
 class User(AbstractUser):
     email = models.EmailField(
         blank=False, null=False,
@@ -66,11 +33,13 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=150, blank=True)
     bio = models.TextField(blank=True)
     role = models.CharField(choices=ROLE_CHOISES, default='user', max_length=9)
+    confirmation_code = models.UUIDField(
+        default=uuid.uuid4,
+        editable=False,
+        unique=True,
+    )
 
-    objects = CustomUserManager()
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    REQUIRED_FIELDS = ['email', ]
 
     class Meta:
         verbose_name = 'Пользователь'

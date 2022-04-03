@@ -4,20 +4,20 @@
 """
 
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from rest_framework import routers
 # from rest_framework_simplejwt.views import TokenObtainPairView
-from django.views.decorators.csrf import csrf_exempt
-from .views import UserCreateViewSet
+# from django.views.decorators.csrf import csrf_exempt
+from . import views
 
 app_name = 'api'
 
-router = DefaultRouter()
-# router.register('auth/signup/', UserCreateViewSet)
+router = routers.DefaultRouter()
+# router.register(r'auth/signup/', UserCreateViewSet, basename='create_user')
 
 
 urlpatterns = [
     path('v1/', include(router.urls)),
-    path('v1/auth/signup/', csrf_exempt(UserCreateViewSet)),
+    path('v1/auth/signup/', views.UserCreateViewSet.as_view()),
     # path(
     #     'v1/auth/token/',
     #     TokenObtainPairView.as_view(),
