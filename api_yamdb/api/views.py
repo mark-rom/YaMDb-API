@@ -3,7 +3,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from reviews import models
 from .serializers import ReviewSerializer, CommentSerializer
-import permissions
+from . import permissions
 
 
 class ReviewViewSet(ModelViewSet):
@@ -17,8 +17,12 @@ class ReviewViewSet(ModelViewSet):
     )
 
     def perform_create(self, serializer):
-        user_id = self.request.user
-        serializer.save(author=get_object_or_404(models.User, pk=user_id))
+        """
+        Поля author и title заполняются из данных запроса.
+        """
+        author = get_object_or_404(models.User, pk=self.request.user)
+        title = get_object_or_404(models.Title, pk=self.kwargs.get('title_id'))
+        serializer.save(author=author, title_id=title)
 
 
 class CommentViewSet(ModelViewSet):
@@ -32,5 +36,12 @@ class CommentViewSet(ModelViewSet):
     )
 
     def perform_create(self, serializer):
-        user_id = self.request.user
-        serializer.save(author=get_object_or_404(models.User, pk=user_id))
+        """
+        Поля author, title и review заполняются из данных запроса.
+        """
+        author = get_object_or_404(models.User, pk=self.request.user)
+        title = get_object_or_404(models.Title, pk=self.kwargs.get('title_id'))
+        review = get_object_or_404(
+            models.Review, pk=self.kwargs.get('review_id')
+        )
+        serializer.save(author=author, title_id=title, review_id=review)
