@@ -48,6 +48,9 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+    def __unicode__(self):
+        return self.confirmation_code
+
     def get_tokens_for_user(user):
         refresh = RefreshToken.for_user(user)
 

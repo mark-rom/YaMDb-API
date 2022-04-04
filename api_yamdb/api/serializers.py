@@ -4,7 +4,6 @@ from reviews import models
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
-    # email = serializers.EmailField()
 
     class Meta:
         model = models.User
