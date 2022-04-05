@@ -1,8 +1,7 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser  # UserManager
-from rest_framework_simplejwt.tokens import RefreshToken
-# from django.core.mail import send_mail
+# from rest_framework_simplejwt.tokens import RefreshToken
 
 ROLE_CHOISES = (
     ('user', 'user'),
@@ -35,7 +34,7 @@ class User(AbstractUser):
     role = models.CharField(choices=ROLE_CHOISES, default='user', max_length=9)
     confirmation_code = models.UUIDField(
         default=uuid.uuid4,
-        editable=False,
+        editable=True,
         unique=True,
     )
 
@@ -50,14 +49,6 @@ class User(AbstractUser):
 
     def __unicode__(self):
         return self.confirmation_code
-
-    def get_tokens_for_user(user):
-        refresh = RefreshToken.for_user(user)
-
-        return {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        }
 
 
 class Genre(models.Model):
