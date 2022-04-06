@@ -58,4 +58,5 @@ class Command(BaseCommand):
 # Что бы скрипт работал пришлось видоизменить CSV файлы
 # users добавил is_superuser,is_staff,is_active,date_joined и confirmation_code
 # также необходимо добавить по 1 запятой для каждого столбца
-# Для confirmation_code изза уникальности параметра пришлось прроставить цифры
+# Для confirmation_code изза уникальности параметра пришлось проставить цифры
+# Командна - python manage.py unpackingcsv

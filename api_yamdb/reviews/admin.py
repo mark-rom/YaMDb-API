@@ -1,5 +1,4 @@
 from django.contrib import admin
-# from django.contrib.auth import get_user_model
 from .models import Category, Comment, Genre, Review, Title, TitleGenre, User
 from django.contrib.auth.admin import UserAdmin
 from reviews.forms import CustomUserCreationForm, CustomUserChangeForm
@@ -19,18 +18,6 @@ class CustomUserAdmin(UserAdmin):
         'role'
     ]
     empty_value_display = '-пусто-'
-
-# class UserAdmin(admin.ModelAdmin):
-#     list_display = [
-#         'pk',
-#         'username',
-#         'email',
-#         'first_name',
-#         'last_name',
-#         'bio',
-#         'role'
-#     ]
-#     empty_value_display = '-пусто-'
 
 
 class TitleGenreInline(admin.TabularInline):
