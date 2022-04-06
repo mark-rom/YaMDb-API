@@ -26,7 +26,11 @@ class CategoryViewSet(CustomViewSet):
     lookup_field = 'slug'
     queryset = models.Category.objects.all()
     serializer_class = serializers.CategorySerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+        permissions.IsAdmin,
+        permissions.IsSuperuser
+    )
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -38,7 +42,11 @@ class GenreViewSet(CustomViewSet):
     lookup_field = 'slug'
     queryset = models.Genre.objects.all()
     serializer_class = serializers.GenreSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+        permissions.IsAdmin,
+        permissions.IsSuperuser
+    )
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -62,9 +70,12 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(ModelViewSet):
+    # к /reviews/ должен выводиться список
     queryset = models.Review.objects.all()
     serializer_class = serializers.ReviewSerializer
+    pagination_class = LimitOffsetPagination
     permission_classes = (
+        IsAuthenticatedOrReadOnly,
         permissions.IsAuthor,
         permissions.IsModer,
         permissions.IsAdmin,
@@ -81,9 +92,12 @@ class ReviewViewSet(ModelViewSet):
 
 
 class CommentViewSet(ModelViewSet):
+    # к /comments/ должен выводиться список
     queryset = models.Comment.objects.all()
     serializer_class = serializers.CommentSerializer
+    pagination_class = LimitOffsetPagination
     permission_classes = (
+        IsAuthenticatedOrReadOnly,
         permissions.IsAuthor,
         permissions.IsModer,
         permissions.IsAdmin,

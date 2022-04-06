@@ -20,21 +20,30 @@ class IsAuthor(ReadOnly):
 
     def has_object_permission(self, request, view, obj):
         if isinstance(obj, models.Review) or isinstance(obj, models.Comment):
-            return request.user == obj.author
+            return (
+                request.user == obj.author
+                or super().has_object_permission(request, view, obj)
+            )
 
         return super().has_object_permission(request, view, obj)
 
 
-class IsModer(IsAuthor):
+class IsModer(ReadOnly):
     """
     Пользователь с ролью 'moderator' может править все Отзывы и Комментарии.
     Пользователь с ролью 'user' будет проверен на авторство.
-    Используется только в Review и Comment.
+    Используется только в Review и Comment,
+    с другими объектами только на чтение.
     """
 
     def has_object_permission(self, request, view, obj):
-        if isinstance(obj, models.Review) or isinstance(obj, models.Comment):
-            return request.user.role == 'moderator'
+        if not request.user.is_anonymous:
+            if isinstance(obj, models.Review) or isinstance(obj, models.Comment):
+                return (
+                    request.user.role == 'moderator'
+                    or super().has_object_permission(request, view, obj)
+                )
+            return super().has_object_permission(request, view, obj)
 
         return super().has_object_permission(request, view, obj)
 
@@ -46,10 +55,12 @@ class IsAdmin(ReadOnly):
     """
 
     def has_object_permission(self, request, view, obj):
-        return (
-            request.user.role == 'admin'
-            or super().has_object_permission(request, view, obj)
-        )
+        if not request.user.is_anonymous:
+            return (
+                request.user.role == 'admin'
+                or super().has_object_permission(request, view, obj)
+            )
+        return super().has_object_permission(request, view, obj)
 
 
 class IsSuperuser(ReadOnly):
