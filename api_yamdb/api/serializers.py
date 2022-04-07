@@ -1,10 +1,65 @@
 from datetime import datetime
 
+from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
 from rest_framework import serializers
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews import models
+
+
+class UserCreateSerializer(serializers.ModelSerializer):
+    """Сериализатор для создания пользователя."""
+
+    def send_mail(self, username):  # метод для отправки e-mail
+        user = get_object_or_404(models.User, username=username)
+        send_mail(
+            'Добро пожаловать на YaMDB',
+            f'Дорогой {username},\n'
+            f'Ваш confirmation_code: {user.confirmation_code}',
+            'from@example.com',
+            [f'{user.email}'],
+            fail_silently=False,
+        )
+
+    def validate(self, attrs):
+        # Проверка юзера на наличие в таблице уже есть
+        if attrs['username'] == 'me':
+            raise serializers.ValidationError
+        return attrs
+
+    class Meta:
+        model = models.User
+        fields = ('email', 'username', )
+
+
+class CustomTokenObtainSerializer(serializers.ModelSerializer):
+    """
+    Кастомный сериализатор формы предоставления данных для аутентификации.
+    Валидация по "confirmation_code".
+    """
+    username_field = models.User.USERNAME_FIELD
+
+    def __init__(self, *args, **kwargs):
+        # Переопределяем поля в форме получения токена
+        super(CustomTokenObtainSerializer, self).__init__(*args, **kwargs)
+        self.fields[self.username_field] = serializers.CharField()
+        self.fields["confirmation_code"] = serializers.CharField()
+
+    def get_token(self, user):
+        refresh = RefreshToken.for_user(user)
+        return {'access': str(refresh.access_token), }
+
+    def validate(self, attrs):
+        user = get_object_or_404(models.User, username=attrs['username'])
+        if attrs['confirmation_code'] != str(user.confirmation_code):
+            raise serializers.ValidationError
+        return attrs
+
+    class Meta:
+        model = models.User
+        fields = ('confirmation_code', 'username', )
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -69,33 +124,22 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    author = serializers.StringRelatedField(read_only=True)
+    author = serializers.StringRelatedField(
+        read_only=True,
+        default=serializers.CurrentUserDefault()
+    )
+    title = serializers.HiddenField(default=TitleReadSerializer)
 
     class Meta:
         model = models.Review
-        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        fields = ('id', 'text', 'author', 'title', 'score', 'pub_date')
         validators = [
             serializers.UniqueTogetherValidator(
                 queryset=models.Review.objects.all(),
-                fields=('title_id', 'author')
+                fields=['title', 'author'],
+                message='вы уже оставляли отзыв'
             )
         ]
-
-        def validate(self, data):
-            """
-            Проверка на наличие отзывов от этого пользователя на произведение.
-            Пользователь может оставить
-            только один отзыв на произведение.
-            """
-            title_reviews = get_object_or_404(
-                models.Title, data['title_id']
-            ).rewiews.all()
-            author = self.context['request'].user
-            if title_reviews.filter(author__in=author):
-                raise serializers.ValidationError(
-                    'Вы уже оставляли отзыв на это произведение'
-                )
-            return data
 
 
 class CommentSerializer(serializers.ModelSerializer):

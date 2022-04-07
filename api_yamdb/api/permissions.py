@@ -54,6 +54,9 @@ class IsAdmin(ReadOnly):
     В том числе делать небезопасные запросы.
     """
 
+    def has_permission(self, request, view):
+        return request.method in permissions.SAFE_METHODS
+
     def has_object_permission(self, request, view, obj):
         if not request.user.is_anonymous:
             return (
@@ -63,7 +66,7 @@ class IsAdmin(ReadOnly):
         return super().has_object_permission(request, view, obj)
 
 
-class IsSuperuser(ReadOnly):
+class IsSuperuser(IsAdmin):
     """
     Superuser вправе обращаться к любым эндпоинтам вне зависимости от role.
     В том числе делать небезопасные запросы.
