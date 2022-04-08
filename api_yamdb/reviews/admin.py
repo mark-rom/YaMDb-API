@@ -70,7 +70,6 @@ class ReviewAdmin(admin.ModelAdmin):
 class CommentAdmin(admin.ModelAdmin):
     list_display = [
         'pk',
-        'title_id',
         'review_id',
         'text',
         'author',
