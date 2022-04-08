@@ -27,7 +27,7 @@ class UserCreateViewSet(generics.CreateAPIView):
     """
     Представление для создание пользователя. Имеет только POST запрос.
     """
-    permission_classes = (AllowAny, )
+    permission_classes = (AllowAny,)
     serializer_class = serializers.UserCreateSerializer
     queryset = models.User.objects.all()
 
@@ -40,8 +40,11 @@ class UserCreateViewSet(generics.CreateAPIView):
             serializer.send_mail(serializer.data['username'])
 
             return response.Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED
+                data={
+                    'email': serializer.data['email'],
+                    'username': serializer.data['username']
+                },
+                status=status.HTTP_200_OK
             )
 
         return response.Response(
@@ -80,6 +83,12 @@ class CustomTokenObtain(generics.CreateAPIView):
         )
 
 
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = models.User.objects.all()
+    serializer_class = serializers.UserSerializer
+    permission_classes = (permissions.AdminOr403,)
+
+
 class CategoryViewSet(CustomViewSet):
     """Вью-класс Категории. Реализованы методы чтения,
     создания и удаления объектов. Есть поиск по названию."""
@@ -87,7 +96,8 @@ class CategoryViewSet(CustomViewSet):
     queryset = models.Category.objects.all()
     serializer_class = serializers.CategorySerializer
     permission_classes = (
-        permissions.IsAdmin,
+        permissions.ListReadOnly,
+        permissions.AdminOr403,
     )
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
@@ -101,8 +111,8 @@ class GenreViewSet(CustomViewSet):
     queryset = models.Genre.objects.all()
     serializer_class = serializers.GenreSerializer
     permission_classes = (
-        permissions.IsAdmin,
-        permissions.IsSuperuser
+        permissions.ListReadOnly,
+        permissions.AdminOr403,
     )
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
@@ -115,7 +125,9 @@ class TitleViewSet(viewsets.ModelViewSet):
     Есть фильтр по полям slug категории/жанра, названию, году."""
     queryset = models.Title.objects.all()
     serializer_class = serializers.TitleReadSerializer
-    permission_classes = (permissions.IsAdmin, permissions.IsSuperuser)
+    permission_classes = (
+        permissions.AdminOr403,
+    )
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_сlass = TitleFilterSet
@@ -131,10 +143,9 @@ class ReviewViewSet(ModelViewSet):
     serializer_class = serializers.ReviewSerializer
     pagination_class = LimitOffsetPagination
     permission_classes = (
-        permissions.IsAuthor,
-        permissions.IsModer,
-        permissions.IsAdmin,
-        permissions.IsSuperuser
+        permissions.AuthorOrReadOnly,
+        permissions.ModerOrReadOnly,
+        permissions.AdminOr403,
     )
 
     def perform_create(self, serializer):
@@ -155,10 +166,9 @@ class CommentViewSet(ModelViewSet):
     serializer_class = serializers.CommentSerializer
     pagination_class = LimitOffsetPagination
     permission_classes = (
-        permissions.IsAuthor,
-        permissions.IsModer,
-        permissions.IsAdmin,
-        permissions.IsSuperuser
+        permissions.AuthorOrReadOnly,
+        permissions.ModerOrReadOnly,
+        permissions.AdminOr403,
     )
 
     def perform_create(self, serializer):

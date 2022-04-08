@@ -29,9 +29,18 @@ class UserCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError
         return attrs
 
+    def create(self, validated_data):
+        if 'role' not in self.initial_data:
+            user = models.User.objects.create(**validated_data)
+            return user
+
+        if validated_data['role'] in ['moderator', 'admin']:
+            return models.User.objects.create(**validated_data, is_staff=True)
+        return super().create(validated_data)
+
     class Meta:
         model = models.User
-        fields = ('email', 'username', )
+        fields = ('email', 'username', 'role')
 
 
 class CustomTokenObtainSerializer(serializers.ModelSerializer):
@@ -60,6 +69,12 @@ class CustomTokenObtainSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User
         fields = ('confirmation_code', 'username', )
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.User
+        fields = '__all__'
 
 
 class CategorySerializer(serializers.ModelSerializer):
