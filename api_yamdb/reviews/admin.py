@@ -1,9 +1,13 @@
 from django.contrib import admin
-
 from .models import Category, Comment, Genre, Review, Title, TitleGenre, User
+from django.contrib.auth.admin import UserAdmin
+from reviews.forms import CustomUserCreationForm, CustomUserChangeForm
 
 
-class UserAdmin(admin.ModelAdmin):
+class CustomUserAdmin(UserAdmin):
+    add_form = CustomUserCreationForm
+    form = CustomUserChangeForm
+    model = User
     list_display = [
         'pk',
         'username',
@@ -74,7 +78,7 @@ class CommentAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
 
-admin.site.register(User, UserAdmin)
+admin.site.register(User, CustomUserAdmin)
 admin.site.register(Genre, GenreAdmin)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Title, TitleAdmin)
