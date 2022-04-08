@@ -96,7 +96,8 @@ class CategoryViewSet(CustomViewSet):
     queryset = models.Category.objects.all()
     serializer_class = serializers.CategorySerializer
     permission_classes = (
-        permissions.ListReadOnly,
+        # permissions.ListReadOnly,
+        permissions.ModerOrReadOnly,
         permissions.AdminOr403,
     )
     pagination_class = LimitOffsetPagination

@@ -43,6 +43,17 @@ class User(AbstractUser):
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['username', 'email'],
+                name='unique_login_fields',
+
+            ),
+            models.CheckConstraint(
+                check=models.Q(username__exact='me'),
+                name='invalid_name',
+            ),
+        ]
 
     def __str__(self):
         return self.username
@@ -80,7 +91,7 @@ class Title(models.Model):
     year = models.IntegerField(
         help_text='Нельзя добавлять произведения, которые еще не вышли'
     )
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, null=True)  # Убрать перед ревью
     genre = models.ManyToManyField(
         Genre,
         through='TitleGenre',

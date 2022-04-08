@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.validators import UniqueTogetherValidator
 
 from reviews import models
 
@@ -25,11 +26,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         # Проверка ввода недопустимого имени ("me") и уникальность полей
-        if attrs['username'] == 'me':
-            raise serializers.ValidationError
-        if attrs['username'] == attrs['email']:
-            raise serializers.ValidationError(
-                'Поля email и username не должны совпадать.')
+        # if attrs['username'] == 'me':
+        #     raise serializers.ValidationError
+        # if attrs['username'] == attrs['email']:
+        #     raise serializers.ValidationError(
+        #         'Поля email и username не должны совпадать.')
         return attrs
 
     def create(self, validated_data):
@@ -44,6 +45,12 @@ class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User
         fields = ('email', 'username', 'role')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=models.User.objects.all(),
+                fields=('username', 'email')
+            )
+        ]
 
 
 class CustomTokenObtainSerializer(serializers.ModelSerializer):
