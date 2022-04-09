@@ -36,14 +36,14 @@ class UserCreateSerializer(serializers.ModelSerializer):
             )
         return attrs
 
-    def create(self, validated_data):
-        if 'role' not in self.initial_data:
-            user = models.User.objects.create(**validated_data)
-            return user
+    # def create(self, validated_data):
+    #     if 'role' not in self.initial_data:
+    #         user = models.User.objects.create(**validated_data)
+    #         return user
 
-        if validated_data['role'] in ['moderator', 'admin']:
-            return models.User.objects.create(**validated_data, is_staff=True)
-        return super().create(validated_data)
+        # if validated_data['role'] in ['moderator', 'admin']:
+        #     return models.User.objects.create(**validated_data, is_staff=True)
+        # return super().create(validated_data)
 
     class Meta:
         model = models.User
