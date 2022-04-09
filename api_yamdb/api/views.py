@@ -100,8 +100,6 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer_class=serializers.UserSerializer,
         permission_classes=(
             IsAuthenticated,
-            permissions.ModerOrReadOnly,
-            permissions.AdminOr403,
         ),
     )
     def me(self, request):
