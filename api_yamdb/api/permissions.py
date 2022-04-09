@@ -47,7 +47,7 @@ class ModerOrReadOnly(ObjectReadOnly):
     """
     Пользователь с ролью 'moderator' может править все Отзывы и Комментарии.
     Используется только в Review и Comment,
-    с другими объектами только на чтение.
+    с другими объектами только чтение.
     """
 
     def has_object_permission(self, request, view, obj):
@@ -61,7 +61,7 @@ class ModerOrReadOnly(ObjectReadOnly):
         return super().has_object_permission(request, view, obj)
 
 
-class AdminOr403(permissions.BasePermission):
+class AdminOnly(permissions.BasePermission):
     """
     Пермишен для доступа к /users/
     """
@@ -81,13 +81,20 @@ class AdminOr403(permissions.BasePermission):
         )
 
 
-class SuperuserOr403(permissions.BasePermission):
+class AdminOrReadOnly(ListObjectReadOnly):
     """
-    Superuser вправе обращаться к любым эндпоинтам вне зависимости от role.
-    В том числе делать небезопасные запросы.
+    Пермишен для доступа к /categories/, /genres/ и /titles/.
     """
     def has_permission(self, request, view):
-        return request.user.is_superuser
+        user = request.user
+        return (
+            (user.is_authenticated and user.role == 'admin')
+            or request.method in permissions.SAFE_METHODS
+        )
 
     def has_object_permission(self, request, view, obj):
-        return request.user.is_superuser
+        user = request.user
+        return (
+            (user.is_authenticated and user.role == 'admin')
+            or request.method in permissions.SAFE_METHODS
+        )

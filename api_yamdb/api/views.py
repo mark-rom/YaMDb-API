@@ -87,7 +87,7 @@ class CustomTokenObtain(generics.CreateAPIView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = models.User.objects.all()
     serializer_class = serializers.UserSerializer
-    permission_classes = (permissions.AdminOr403,)
+    permission_classes = (permissions.AdminOnly,)
     lookup_field = "username"
     filter_backends = (filters.SearchFilter,)
     search_fields = ("username",)
@@ -124,11 +124,7 @@ class CategoryViewSet(CustomViewSet):
     lookup_field = 'slug'
     queryset = models.Category.objects.all()
     serializer_class = serializers.CategorySerializer
-    permission_classes = (
-        permissions.ListReadOnly,
-        permissions.ModerOrReadOnly,
-        # permissions.AdminOr403,
-    )
+    permission_classes = (permissions.AdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -140,10 +136,7 @@ class GenreViewSet(CustomViewSet):
     lookup_field = 'slug'
     queryset = models.Genre.objects.all()
     serializer_class = serializers.GenreSerializer
-    permission_classes = (
-        permissions.ListReadOnly,
-        permissions.AdminOr403,
-    )
+    permission_classes = (permissions.AdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -155,9 +148,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     Есть фильтр по полям slug категории/жанра, названию, году."""
     queryset = models.Title.objects.all()
     serializer_class = serializers.TitleReadSerializer
-    permission_classes = (
-        permissions.AdminOr403,
-    )
+    permission_classes = (permissions.AdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_сlass = TitleFilterSet
@@ -175,7 +166,6 @@ class ReviewViewSet(ModelViewSet):
     permission_classes = (
         permissions.AuthorOrReadOnly,
         permissions.ModerOrReadOnly,
-        permissions.AdminOr403,
     )
 
     def perform_create(self, serializer):
@@ -198,7 +188,6 @@ class CommentViewSet(ModelViewSet):
     permission_classes = (
         permissions.AuthorOrReadOnly,
         permissions.ModerOrReadOnly,
-        permissions.AdminOr403,
     )
 
     def perform_create(self, serializer):
