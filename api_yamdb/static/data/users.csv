@@ -1,6 +1,7 @@
 id,username,email,role,bio,first_name,last_name,is_superuser,is_staff,is_active,date_joined,confirmation_code
-100,bingobongo,bingobongo@yamdb.fake,user,,,,,,,,1
-101,capt_obvious,capt_obvious@yamdb.fake,admin,,,,,,,,2
-102,faust,faust@yamdb.fake,user,,,,,,,,3
-103,reviewer,reviewer@yamdb.fake,user,,,,,,,,4
-104,angry,angry@yamdb.fake,moderator,,,,,,,,5
+100,bingobongo,bingobongo@yamdb.fake,user,,,,,,,,98b00a5f602a47ffac6437bbc9e68184
+101,capt_obvious,capt_obvious@yamdb.fake,admin,,,,,,,,dfd164eb1c3043f6baf6389ae48666dd
+102,faust,faust@yamdb.fake,user,,,,,,,,5837b7ebbf584f928635c7260aaeeb01
+103,reviewer,reviewer@yamdb.fake,user,,,,,,,,49510ae30f854b5186ceb7c3356f3711
+104,angry,angry@yamdb.fake,moderator,,,,,,,,5d113ebaf4d14cf485fb14980285d60e
+105,Mark,Mark@mark.com,user,,,,,,,,85742f34015749828bcdecee8281688f

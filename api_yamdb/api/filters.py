@@ -2,7 +2,7 @@ import django_filters
 from reviews import models
 
 
-class TitleFilterSet(django_filters.FilterSet):
+class TitleFilter(django_filters.FilterSet):
     category = django_filters.CharFilter(field_name='category__slug'),
     genre = django_filters.CharFilter(field_name='genre__slug'),
     name = django_filters.CharFilter(field_name='name'),

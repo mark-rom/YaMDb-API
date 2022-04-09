@@ -2,9 +2,10 @@ from datetime import datetime
 
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from django.db.models import Avg
-from rest_framework import serializers
+# from django.db.models import Avg
+from rest_framework import serializers, status
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.validators import UniqueTogetherValidator
 
 from reviews import models
 
@@ -24,14 +25,35 @@ class UserCreateSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, attrs):
-        # Проверка юзера на наличие в таблице уже есть
+        """Проверка ввода недопустимого имени ("me") и уникальность полей"""
         if attrs['username'] == 'me':
-            raise serializers.ValidationError
+            raise serializers.ValidationError(
+                "Поле username не может быть 'me'."
+            )
+        if attrs['username'] == attrs['email']:
+            raise serializers.ValidationError(
+                'Поля email и username не должны совпадать.'
+            )
         return attrs
+
+    def create(self, validated_data):
+        if 'role' not in self.initial_data:
+            user = models.User.objects.create(**validated_data)
+            return user
+
+        if validated_data['role'] in ['moderator', 'admin']:
+            return models.User.objects.create(**validated_data, is_staff=True)
+        return super().create(validated_data)
 
     class Meta:
         model = models.User
-        fields = ('email', 'username', )
+        fields = ('email', 'username')  # , 'role'
+        validators = [
+            UniqueTogetherValidator(
+                queryset=models.User.objects.all(),
+                fields=('username', 'email')
+            )
+        ]
 
 
 class CustomTokenObtainSerializer(serializers.ModelSerializer):
@@ -62,6 +84,20 @@ class CustomTokenObtainSerializer(serializers.ModelSerializer):
         fields = ('confirmation_code', 'username', )
 
 
+class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор для изменения данных пользователя"""
+    class Meta:
+        model = models.User
+        fields = (
+            "username",
+            "email",
+            "role",
+            "first_name",
+            "last_name",
+            "bio",
+        )
+
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Category
@@ -77,7 +113,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleReadSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(read_only=True, many=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(read_only=True, required=False)
 
     class Meta:
         model = models.Title
@@ -89,9 +125,6 @@ class TitleReadSerializer(serializers.ModelSerializer):
             'genre',
             'category',
             'rating')
-
-    def get_rating(self, obj):
-        return obj.reviews.all().aggregate(Avg('score'))
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
@@ -129,6 +162,17 @@ class ReviewSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
     title = serializers.HiddenField(default=TitleReadSerializer)
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        title = self.context['request'].parser_context['kwargs']['title_id']
+        review = models.Review.objects.filter(title=title, author=user)
+        if review.exists():
+            raise serializers.ValidationError(
+                detail='Нельзя оставлять больше одного отзыва на произведение',
+                code=status.HTTP_400_BAD_REQUEST
+            )
+        return attrs
 
     class Meta:
         model = models.Review

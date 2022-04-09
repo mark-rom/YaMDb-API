@@ -6,19 +6,30 @@ from rest_framework import (
 )
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from reviews import models
 from . import permissions
 from . import serializers
-from .filters import TitleFilterSet
+from .filters import TitleFilter
+from rest_framework.decorators import action
+from django.db.models import Avg
+
+
+class CustomViewSet(
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        mixins.DestroyModelMixin,
+        viewsets.GenericViewSet):
+    """Кастомный класс для чтения, создания и удаления объектов."""
+    pass
 
 
 class UserCreateViewSet(generics.CreateAPIView):
     """
     Представление для создание пользователя. Имеет только POST запрос.
     """
-    permission_classes = (AllowAny, )
+    permission_classes = (AllowAny,)
     serializer_class = serializers.UserCreateSerializer
     queryset = models.User.objects.all()
 
@@ -31,8 +42,11 @@ class UserCreateViewSet(generics.CreateAPIView):
             serializer.send_mail(serializer.data['username'])
 
             return response.Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED
+                data={
+                    'email': serializer.data['email'],
+                    'username': serializer.data['username']
+                },
+                status=status.HTTP_200_OK
             )
 
         return response.Response(
@@ -71,13 +85,38 @@ class CustomTokenObtain(generics.CreateAPIView):
         )
 
 
-class CustomViewSet(
-        mixins.ListModelMixin,
-        mixins.CreateModelMixin,
-        mixins.DestroyModelMixin,
-        viewsets.GenericViewSet):
-    """Кастомный класс для чтения, создания и удаления объектов."""
-    pass
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = models.User.objects.all()
+    serializer_class = serializers.UserSerializer
+    permission_classes = (permissions.AdminOnly,)
+    lookup_field = "username"
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ("username",)
+
+    @action(
+        detail=False,
+        methods=["get", "patch"],
+        url_path="me",
+        url_name="me",
+        serializer_class=serializers.UserSerializer,
+        permission_classes=(
+            IsAuthenticated,
+        ),
+    )
+    def me(self, request):
+        """Изменение данных своей учетной записи."""
+        me_user = request.user
+        serializer = self.get_serializer(me_user)
+        if request.method == "PATCH":
+            serializer = self.get_serializer(
+                me_user, data=request.data, partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save(email=me_user.email, role=me_user.role)
+            return response.Response(
+                serializer.data, status=status.HTTP_200_OK
+            )
+        return response.Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CategoryViewSet(CustomViewSet):
@@ -86,9 +125,7 @@ class CategoryViewSet(CustomViewSet):
     lookup_field = 'slug'
     queryset = models.Category.objects.all()
     serializer_class = serializers.CategorySerializer
-    permission_classes = (
-        permissions.IsAdmin,
-    )
+    permission_classes = (permissions.AdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -100,10 +137,7 @@ class GenreViewSet(CustomViewSet):
     lookup_field = 'slug'
     queryset = models.Genre.objects.all()
     serializer_class = serializers.GenreSerializer
-    permission_classes = (
-        permissions.IsAdmin,
-        permissions.IsSuperuser
-    )
+    permission_classes = (permissions.AdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -113,14 +147,11 @@ class TitleViewSet(viewsets.ModelViewSet):
     """Вью-класс Произведения. Реализованы методы чтения,
     создания, частичного обновления и удаления объектов.
     Есть фильтр по полям slug категории/жанра, названию, году."""
-    queryset = models.Title.objects.all()
-    serializer_class = serializers.TitleReadSerializer
-    permission_classes = (
-        permissions.IsAdmin,
-        permissions.IsSuperuser,)
+    queryset = models.Title.objects.annotate(rating=Avg("reviews__score"))
+    permission_classes = (permissions.AdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_сlass = TitleFilterSet
+    filterset_сlass = TitleFilter
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -133,10 +164,8 @@ class ReviewViewSet(ModelViewSet):
     serializer_class = serializers.ReviewSerializer
     pagination_class = LimitOffsetPagination
     permission_classes = (
-        permissions.IsAuthor,
-        permissions.IsModer,
-        permissions.IsAdmin,
-        permissions.IsSuperuser
+        permissions.AuthorOrReadOnly,
+        permissions.ModerOrReadOnly,
     )
 
     def perform_create(self, serializer):
@@ -157,10 +186,8 @@ class CommentViewSet(ModelViewSet):
     serializer_class = serializers.CommentSerializer
     pagination_class = LimitOffsetPagination
     permission_classes = (
-        permissions.IsAuthor,
-        permissions.IsModer,
-        permissions.IsAdmin,
-        permissions.IsSuperuser
+        permissions.AuthorOrReadOnly,
+        permissions.ModerOrReadOnly,
     )
 
     def perform_create(self, serializer):
