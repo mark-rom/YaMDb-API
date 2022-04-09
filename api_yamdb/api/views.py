@@ -11,8 +11,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from reviews import models
 from . import permissions
 from . import serializers
-from .filters import TitleFilterSet
+from .filters import TitleFilter
 from rest_framework.decorators import action
+from django.db.models import Avg
 
 
 class CustomViewSet(
@@ -146,12 +147,11 @@ class TitleViewSet(viewsets.ModelViewSet):
     """Вью-класс Произведения. Реализованы методы чтения,
     создания, частичного обновления и удаления объектов.
     Есть фильтр по полям slug категории/жанра, названию, году."""
-    queryset = models.Title.objects.all()
-    serializer_class = serializers.TitleReadSerializer
+    queryset = models.Title.objects.annotate(rating=Avg("reviews__score"))
     permission_classes = (permissions.AdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_сlass = TitleFilterSet
+    filterset_сlass = TitleFilter
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):

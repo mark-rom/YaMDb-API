@@ -1,15 +1,15 @@
 import django_filters
-from reviews.models import Title
+from reviews import models
 
 
-class TitleFilterSet(django_filters.FilterSet):
+class TitleFilter(django_filters.FilterSet):
     category = django_filters.CharFilter(field_name='category__slug'),
     genre = django_filters.CharFilter(field_name='genre__slug'),
     name = django_filters.CharFilter(field_name='name'),
     year = django_filters.NumberFilter(field_name='year')
 
     class Meta:
-        model = Title
+        model = models.Title
         fields = (
             'category',
             'genre',
