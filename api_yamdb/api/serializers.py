@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.core.mail import send_mail
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 # from django.db.models import Avg
 from rest_framework import serializers, status
@@ -56,18 +57,26 @@ class CustomTokenObtainSerializer(serializers.ModelSerializer):
     username_field = models.User.USERNAME_FIELD
 
     def __init__(self, *args, **kwargs):
-        # Переопределяем поля в форме получения токена
+        """Переопределяем поля в форме получения токена"""
         super(CustomTokenObtainSerializer, self).__init__(*args, **kwargs)
         self.fields[self.username_field] = serializers.CharField()
         self.fields["confirmation_code"] = serializers.CharField()
 
     def get_token(self, user):
+        """Функция создания токена."""
         refresh = RefreshToken.for_user(user)
         return {'access': str(refresh.access_token), }
 
     def validate(self, attrs):
-        user = get_object_or_404(models.User, username=attrs['username'])
-        if attrs['confirmation_code'] != user.confirmation_code:
+        username = attrs['username']
+        confirmation_code = attrs['confirmation_code']
+        if not models.User.objects.filter(username=username).exists():
+            raise Http404(
+                f'User {username} не существует',
+            )
+
+        user = get_object_or_404(models.User, username=username)
+        if confirmation_code != user.confirmation_code:
             raise serializers.ValidationError('Не правильно введены данные')
         return attrs
 

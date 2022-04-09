@@ -86,7 +86,10 @@ class CustomTokenObtain(generics.CreateAPIView):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """Вьюсет доступный только для администратора. Имеет все методы CRUD."""
+    """
+    Вьюсет доступный только для администратора. Имеет все методы CRUD.
+    Можно фильтровать по полю username.
+    """
     queryset = models.User.objects.all()
     serializer_class = serializers.UserSerializer
     permission_classes = (permissions.AdminOnly,)
@@ -105,7 +108,7 @@ class UserViewSet(viewsets.ModelViewSet):
         ),
     )
     def me(self, request):
-        """Изменение данных своей учетной записи."""
+        """Изменение данных своей учетной записи. Имеет GET, PATH запросы"""
         me_user = request.user
         serializer = self.get_serializer(me_user)
         if request.method == "PATCH":
