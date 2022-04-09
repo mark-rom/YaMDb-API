@@ -49,10 +49,10 @@ class User(AbstractUser):
                 name='unique_login_fields',
 
             ),
-            models.CheckConstraint(
-                check=models.Q(username__exact='me'),
-                name='invalid_name',
-            ),
+            # models.CheckConstraint(
+            #     check=models.Q(username__exact='me'),
+            #     name='invalid_name',
+            # ),
         ]
 
     def __str__(self):

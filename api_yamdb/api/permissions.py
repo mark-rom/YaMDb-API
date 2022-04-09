@@ -19,7 +19,10 @@ class ObjectReadOnly(permissions.BasePermission):
         return request.method in permissions.SAFE_METHODS
 
 
-class ListObjectReadOnly(permissions.BasePermission):
+class ListObjectReadOnly(ListReadOnly, ObjectReadOnly):
+    """
+    Базовый пермишен, разрешает только безопасные запросы к спискам и объектам.
+    """
     def has_permission(self, request, view):
         return request.method in permissions.SAFE_METHODS
 

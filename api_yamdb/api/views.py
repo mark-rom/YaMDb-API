@@ -6,12 +6,13 @@ from rest_framework import (
 )
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from reviews import models
 from . import permissions
 from . import serializers
 from .filters import TitleFilterSet
+from rest_framework.decorators import action
 
 
 class CustomViewSet(
@@ -87,6 +88,36 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = models.User.objects.all()
     serializer_class = serializers.UserSerializer
     permission_classes = (permissions.AdminOr403,)
+    lookup_field = "username"
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ("username",)
+
+    @action(
+        detail=False,
+        methods=["get", "patch"],
+        url_path="me",
+        url_name="me",
+        serializer_class=serializers.UserSerializer,
+        permission_classes=(
+            IsAuthenticated,
+            permissions.ModerOrReadOnly,
+            permissions.AdminOr403,
+        ),
+    )
+    def me(self, request):
+        """Изменение данных своей учетной записи."""
+        me_user = request.user
+        serializer = self.get_serializer(me_user)
+        if request.method == "PATCH":
+            serializer = self.get_serializer(
+                me_user, data=request.data, partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save(email=me_user.email, role=me_user.role)
+            return response.Response(
+                serializer.data, status=status.HTTP_200_OK
+            )
+        return response.Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CategoryViewSet(CustomViewSet):
@@ -96,9 +127,9 @@ class CategoryViewSet(CustomViewSet):
     queryset = models.Category.objects.all()
     serializer_class = serializers.CategorySerializer
     permission_classes = (
-        # permissions.ListReadOnly,
+        permissions.ListReadOnly,
         permissions.ModerOrReadOnly,
-        permissions.AdminOr403,
+        # permissions.AdminOr403,
     )
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)

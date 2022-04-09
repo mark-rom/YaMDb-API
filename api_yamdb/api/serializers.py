@@ -25,12 +25,15 @@ class UserCreateSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, attrs):
-        # Проверка ввода недопустимого имени ("me") и уникальность полей
-        # if attrs['username'] == 'me':
-        #     raise serializers.ValidationError
-        # if attrs['username'] == attrs['email']:
-        #     raise serializers.ValidationError(
-        #         'Поля email и username не должны совпадать.')
+        """Проверка ввода недопустимого имени ("me") и уникальность полей"""
+        if attrs['username'] == 'me':
+            raise serializers.ValidationError(
+                "Поле username не может быть 'me'."
+            )
+        if attrs['username'] == attrs['email']:
+            raise serializers.ValidationError(
+                'Поля email и username не должны совпадать.'
+            )
         return attrs
 
     def create(self, validated_data):
@@ -44,7 +47,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.User
-        fields = ('email', 'username', 'role')
+        fields = ('email', 'username')  # , 'role'
         validators = [
             UniqueTogetherValidator(
                 queryset=models.User.objects.all(),
@@ -82,9 +85,17 @@ class CustomTokenObtainSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор для изменения данных пользователя"""
     class Meta:
         model = models.User
-        fields = '__all__'
+        fields = (
+            "username",
+            "email",
+            "role",
+            "first_name",
+            "last_name",
+            "bio",
+        )
 
 
 class CategorySerializer(serializers.ModelSerializer):
