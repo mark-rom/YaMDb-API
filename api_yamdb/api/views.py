@@ -86,6 +86,7 @@ class CustomTokenObtain(generics.CreateAPIView):
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """Вьюсет доступный только для администратора. Имеет все методы CRUD."""
     queryset = models.User.objects.all()
     serializer_class = serializers.UserSerializer
     permission_classes = (permissions.AdminOnly,)
@@ -148,7 +149,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     создания, частичного обновления и удаления объектов.
     Есть фильтр по полям slug категории/жанра, названию, году."""
     queryset = models.Title.objects.annotate(rating=Avg("reviews__score"))
-    permission_classes = (permissions.AdminOrReadOnly,)
+    permission_classes = (permissions.AdminOrReadOnly, )
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_сlass = TitleFilter

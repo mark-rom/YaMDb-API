@@ -13,7 +13,8 @@ from reviews import models
 class UserCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания пользователя."""
 
-    def send_mail(self, username):  # метод для отправки e-mail
+    def send_mail(self, username):
+        """Метод для отправки e-mail"""
         user = get_object_or_404(models.User, username=username)
         send_mail(
             'Добро пожаловать на YaMDB',
@@ -36,18 +37,9 @@ class UserCreateSerializer(serializers.ModelSerializer):
             )
         return attrs
 
-    # def create(self, validated_data):
-    #     if 'role' not in self.initial_data:
-    #         user = models.User.objects.create(**validated_data)
-    #         return user
-
-        # if validated_data['role'] in ['moderator', 'admin']:
-        #     return models.User.objects.create(**validated_data, is_staff=True)
-        # return super().create(validated_data)
-
     class Meta:
         model = models.User
-        fields = ('email', 'username')  # , 'role'
+        fields = ('email', 'username')
         validators = [
             UniqueTogetherValidator(
                 queryset=models.User.objects.all(),
@@ -75,8 +67,8 @@ class CustomTokenObtainSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         user = get_object_or_404(models.User, username=attrs['username'])
-        if attrs['confirmation_code'] != str(user.confirmation_code):
-            raise serializers.ValidationError
+        if attrs['confirmation_code'] != user.confirmation_code:
+            raise serializers.ValidationError('Не правильно введены данные')
         return attrs
 
     class Meta:

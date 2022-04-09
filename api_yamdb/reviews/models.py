@@ -32,10 +32,11 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=150, blank=True)
     bio = models.TextField(blank=True)
     role = models.CharField(choices=ROLE_CHOISES, default='user', max_length=9)
-    confirmation_code = models.UUIDField(
+    confirmation_code = models.CharField(
         default=uuid.uuid4,
         editable=True,
         unique=True,
+        max_length=36
     )
 
     REQUIRED_FIELDS = ['email', ]
@@ -57,9 +58,6 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
-
-    def __unicode__(self):
-        return self.confirmation_code
 
 
 class Genre(models.Model):

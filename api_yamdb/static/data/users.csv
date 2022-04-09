@@ -1,7 +1,7 @@
 id,username,email,role,bio,first_name,last_name,is_superuser,is_staff,is_active,date_joined,confirmation_code
-100,bingobongo,bingobongo@yamdb.fake,user,,,,,,,,98b00a5f602a47ffac6437bbc9e68184
-101,capt_obvious,capt_obvious@yamdb.fake,admin,,,,,,,,dfd164eb1c3043f6baf6389ae48666dd
-102,faust,faust@yamdb.fake,user,,,,,,,,5837b7ebbf584f928635c7260aaeeb01
-103,reviewer,reviewer@yamdb.fake,user,,,,,,,,49510ae30f854b5186ceb7c3356f3711
-104,angry,angry@yamdb.fake,moderator,,,,,,,,5d113ebaf4d14cf485fb14980285d60e
-105,Mark,Mark@mark.com,user,,,,,,,,85742f34015749828bcdecee8281688f
+100,bingobongo,bingobongo@yamdb.fake,user,,,,,,1,,a6ea7b26-be87-467f-948a-7fffb1908358
+101,capt_obvious,capt_obvious@yamdb.fake,admin,,,,1,1,1,,7344b157-99be-4ce9-b19d-16fd47f196c1
+102,faust,faust@yamdb.fake,user,,,,,,1,,131d8b4c-b13b-426e-a29d-7f151a105815
+103,reviewer,reviewer@yamdb.fake,admin,,,,,1,1,,1e6c9e03-9f44-4fe5-8d03-fd2f7fe30104
+104,angry,angry@yamdb.fake,moderator,,,,,,1,,0593bf0b-87d3-4cb8-a937-085e912e3c35
+105,Mark,Mark@mark.com,user,,,,,,1,,e5e61917-fab0-49b0-ae43-571bc6706f54
