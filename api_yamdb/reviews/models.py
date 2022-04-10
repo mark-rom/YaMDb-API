@@ -32,10 +32,12 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=150, blank=True)
     bio = models.TextField(blank=True)
     role = models.CharField(choices=ROLE_CHOISES, default='user', max_length=9)
-    confirmation_code = models.UUIDField(
+    confirmation_code = models.CharField(
         default=uuid.uuid4,
         editable=True,
         unique=True,
+        max_length=36,
+        auto_created=True
     )
 
     REQUIRED_FIELDS = ['email', ]
@@ -49,17 +51,10 @@ class User(AbstractUser):
                 name='unique_login_fields',
 
             ),
-            # models.CheckConstraint(
-            #     check=models.Q(username__exact='me'),
-            #     name='invalid_name',
-            # ),
         ]
 
     def __str__(self):
         return self.username
-
-    def __unicode__(self):
-        return self.confirmation_code
 
 
 class Genre(models.Model):
@@ -174,12 +169,14 @@ class TitleGenre(models.Model):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        db_column='title'
+        db_column='title',
+        related_name='title'
     )
     genre = models.ForeignKey(
         Genre, on_delete=models.SET_NULL,
         db_column='genre',
-        null=True)
+        null=True,
+        related_name='genre')
 
     class Meta:
         verbose_name = 'Жанр произведения'

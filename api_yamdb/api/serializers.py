@@ -31,7 +31,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, attrs):
-        """Проверка ввода недопустимого имени ("me") и уникальность полей"""
+        """Проверка ввода недопустимого имени ("me") и уникальность полей."""
         if attrs['username'] == 'me':
             raise serializers.ValidationError(
                 "Поле username не может быть 'me'."
@@ -42,18 +42,9 @@ class UserCreateSerializer(serializers.ModelSerializer):
             )
         return attrs
 
-    def create(self, validated_data):
-        if 'role' not in self.initial_data:
-            user = models.User.objects.create(**validated_data)
-            return user
-
-        if validated_data['role'] in ['moderator', 'admin']:
-            return models.User.objects.create(**validated_data, is_staff=True)
-        return super().create(validated_data)
-
     class Meta:
         model = models.User
-        fields = ('email', 'username')  # , 'role'
+        fields = ('email', 'username')
         validators = [
             UniqueTogetherValidator(
                 queryset=models.User.objects.all(),
@@ -70,19 +61,22 @@ class CustomTokenObtainSerializer(serializers.ModelSerializer):
     username_field = models.User.USERNAME_FIELD
 
     def __init__(self, *args, **kwargs):
-        # Переопределяем поля в форме получения токена
+        """Переопределяем поля в форме получения токена"""
         super(CustomTokenObtainSerializer, self).__init__(*args, **kwargs)
         self.fields[self.username_field] = serializers.CharField()
         self.fields["confirmation_code"] = serializers.CharField()
 
     def get_token(self, user):
+        """Функция создания токена."""
         refresh = RefreshToken.for_user(user)
         return {'access': str(refresh.access_token), }
 
     def validate(self, attrs):
-        user = get_object_or_404(models.User, username=attrs['username'])
-        if attrs['confirmation_code'] != str(user.confirmation_code):
-            raise serializers.ValidationError
+        username = attrs['username']
+        confirmation_code = attrs['confirmation_code']
+        user = get_object_or_404(models.User, username=username)
+        if confirmation_code != user.confirmation_code:
+            raise serializers.ValidationError('Не правильно введены данные')
         return attrs
 
     class Meta:
@@ -91,7 +85,7 @@ class CustomTokenObtainSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Сериализатор для изменения данных пользователя"""
+    """Сериализатор для изменения данных пользователя."""
     class Meta:
         model = models.User
         fields = (

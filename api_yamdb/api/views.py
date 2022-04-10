@@ -165,9 +165,9 @@ class TitleViewSet(viewsets.ModelViewSet):
     Есть фильтр по полям slug категории/жанра, названию, году.
     """
     queryset = models.Title.objects.annotate(rating=Avg("reviews__score"))
-    permission_classes = (permissions.AdminOrReadOnly,)
+    permission_classes = (permissions.AdminOrReadOnly, )
     pagination_class = LimitOffsetPagination
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = [DjangoFilterBackend]
     filterset_сlass = TitleFilter
 
     def get_serializer_class(self):
