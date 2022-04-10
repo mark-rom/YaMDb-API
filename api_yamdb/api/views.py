@@ -1,19 +1,17 @@
+import rest_framework.permissions as rest_permissions
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import (
-    viewsets, mixins, filters,
-    generics, response, status
-)
-from rest_framework.viewsets import ModelViewSet
+from rest_framework import (filters, generics, mixins, response, status,
+                            viewsets)
+from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
-import rest_framework.permissions as rest_permissions
 
 from reviews import models
-from . import permissions
-from . import serializers
+from users.models import User
+
+from . import permissions, serializers
 from .filters import TitleFilter
-from rest_framework.decorators import action
-from django.db.models import Avg
 
 
 class CustomViewSet(
@@ -31,7 +29,7 @@ class UserCreateViewSet(generics.CreateAPIView):
     """
     permission_classes = (rest_permissions.AllowAny,)
     serializer_class = serializers.UserCreateSerializer
-    queryset = models.User.objects.all()
+    queryset = User.objects.all()
 
     def post(self, request, *args, **kwargs):
         serializer = serializers.UserCreateSerializer(data=request.data)
@@ -61,14 +59,14 @@ class CustomTokenObtain(generics.CreateAPIView):
     """
     permission_classes = (rest_permissions.AllowAny,)
     serializer_class = serializers.CustomTokenObtainSerializer
-    queryset = models.User.objects.all()
+    queryset = User.objects.all()
 
     def post(self, request, *args, **kwargs):
         serializer = serializers.CustomTokenObtainSerializer(data=request.data)
 
         if serializer.is_valid():
             user = get_object_or_404(
-                models.User,
+                User,
                 username=serializer.data['username']
             )
 
@@ -92,7 +90,7 @@ class UserViewSet(viewsets.ModelViewSet):
     частичного обновления и удаления объектов.
     Есть поиск по полю username.
     """
-    queryset = models.User.objects.all()
+    queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
     permission_classes = (permissions.AdminOnly,)
     lookup_field = "username"
@@ -176,7 +174,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         return serializers.TitleWriteSerializer
 
 
-class ReviewViewSet(ModelViewSet):
+class ReviewViewSet(viewsets.ModelViewSet):
     """
     Вьюсет Отзывы.
     Реализованы методы чтения, создания,
@@ -207,7 +205,7 @@ class ReviewViewSet(ModelViewSet):
         )
 
 
-class CommentViewSet(ModelViewSet):
+class CommentViewSet(viewsets.ModelViewSet):
     """
     Вьюсет Комментарии.
     Реализованы методы чтения, создания,

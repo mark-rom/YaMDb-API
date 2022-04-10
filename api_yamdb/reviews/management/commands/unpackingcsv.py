@@ -1,7 +1,8 @@
-from django.core.management.base import BaseCommand
-import sqlite3
 import csv
 import os
+import sqlite3
+
+from django.core.management.base import BaseCommand
 
 from api_yamdb.settings import BASE_DIR
 
@@ -58,5 +59,6 @@ class Command(BaseCommand):
 # Что бы скрипт работал пришлось видоизменить CSV файлы
 # users добавил is_superuser,is_staff,is_active,date_joined и confirmation_code
 # также необходимо добавить по 1 запятой для каждого столбца
-# Для confirmation_code из-за уникальности параметра добавлены указаны реальные значения
+# Для confirmation_code из-за уникальности параметра
+# добавлены указаны реальные значения
 # Командна - python manage.py unpackingcsv

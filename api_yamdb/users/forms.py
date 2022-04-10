@@ -1,5 +1,6 @@
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from reviews.models import User
+from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+
+from .models import User
 
 
 class CustomUserCreationForm(UserCreationForm):
