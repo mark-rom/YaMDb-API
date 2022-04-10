@@ -11,9 +11,15 @@ from reviews import models
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания пользователя."""
+    """
+    Сериализатор создания пользователя.
+    Проверяет username на запрещенные значения.
+    """
 
-    def send_mail(self, username):  # метод для отправки e-mail
+    def send_mail(self, username):
+        """
+        Метод send_mail отправляет confirmation_code на почту пользователя.
+        """
         user = get_object_or_404(models.User, username=username)
         send_mail(
             'Добро пожаловать на YaMDB',
@@ -167,10 +173,11 @@ class ReviewSerializer(serializers.ModelSerializer):
     title = serializers.HiddenField(default=TitleReadSerializer)
 
     def validate(self, attrs):
-        user = self.context['request'].user
-        title = self.context['request'].parser_context['kwargs']['title_id']
+        request = self.context['request']
+        user = request.user
+        title = request.parser_context['kwargs']['title_id']
         review = models.Review.objects.filter(title=title, author=user)
-        if review.exists():
+        if review.exists() and request.method == 'POST':
             raise serializers.ValidationError(
                 detail='Нельзя оставлять больше одного отзыва на произведение',
                 code=status.HTTP_400_BAD_REQUEST
