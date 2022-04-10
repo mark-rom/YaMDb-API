@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from django.db.models import Avg
+# from django.db.models import Avg
 from rest_framework import serializers, status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.validators import UniqueTogetherValidator
@@ -107,19 +107,19 @@ class UserSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Category
-        exclude = ['id']
+        fields = ('name', 'slug')
 
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Genre
-        exclude = ['id']
+        fields = ('name', 'slug')
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(read_only=True, many=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(read_only=True, required=False)
 
     class Meta:
         model = models.Title
@@ -131,9 +131,6 @@ class TitleReadSerializer(serializers.ModelSerializer):
             'genre',
             'category',
             'rating')
-
-    def get_rating(self, obj):
-        return obj.reviews.all().aggregate(Avg('score'))
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
@@ -198,7 +195,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField(read_only=True)
+    review = serializers.HiddenField(default=ReviewSerializer)
 
     class Meta:
         model = models.Comment
-        fields = ('id', 'text', 'author', 'pub_date')
+        fields = ('id', 'text', 'author', 'review', 'pub_date')

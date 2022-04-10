@@ -11,8 +11,9 @@ import rest_framework.permissions as rest_permissions
 from reviews import models
 from . import permissions
 from . import serializers
-from .filters import TitleFilterSet
+from .filters import TitleFilter
 from rest_framework.decorators import action
+from django.db.models import Avg
 
 
 class CustomViewSet(
@@ -163,12 +164,11 @@ class TitleViewSet(viewsets.ModelViewSet):
     частичного обновления и удаления объектов.
     Есть фильтр по полям slug категории/жанра, названию, году.
     """
-    queryset = models.Title.objects.all()
-    serializer_class = serializers.TitleReadSerializer
+    queryset = models.Title.objects.annotate(rating=Avg("reviews__score"))
     permission_classes = (permissions.AdminOrReadOnly,)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_сlass = TitleFilterSet
+    filterset_сlass = TitleFilter
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -182,13 +182,17 @@ class ReviewViewSet(ModelViewSet):
     Реализованы методы чтения, создания,
     частичного обновления и удаления объектов.
     """
-    queryset = models.Review.objects.all()
     serializer_class = serializers.ReviewSerializer
     pagination_class = LimitOffsetPagination
     permission_classes = (
         rest_permissions.IsAuthenticatedOrReadOnly,
         permissions.AuthorOrReadOnly
     )
+
+    def get_queryset(self):
+        title_id = self.kwargs.get('title_id')
+        title = get_object_or_404(models.Title, pk=title_id)
+        return title.reviews.all()
 
     def perform_create(self, serializer):
         """
@@ -216,6 +220,11 @@ class CommentViewSet(ModelViewSet):
         rest_permissions.IsAuthenticatedOrReadOnly,
         permissions.AuthorOrReadOnly
     )
+
+    def get_queryset(self):
+        review_id = self.kwargs.get('review_id')
+        review = get_object_or_404(models.Review, pk=review_id)
+        return review.comments.all()
 
     def perform_create(self, serializer):
         """
