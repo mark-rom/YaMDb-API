@@ -28,9 +28,9 @@ Cоздать и активировать виртуальное окружен�
 `python3 manage.py makemigrations`  
 `python3 manage.py migrate`  
   
- Залить базу данных из csv файлов:  
+Заполнить базу данных из csv файлов:  
   
-`python3 manage.py unpackingcsv`
+`python3 manage.py populate_db`
   
 Запустить проект:  
   
