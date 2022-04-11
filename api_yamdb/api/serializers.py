@@ -1,22 +1,27 @@
 from datetime import datetime
 
 from django.core.mail import send_mail
-from django.http import Http404
 from django.shortcuts import get_object_or_404
 # from django.db.models import Avg
 from rest_framework import serializers, status
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.validators import UniqueTogetherValidator
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews import models
+from users.models import User
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания пользователя."""
+    """
+    Сериализатор создания пользователя.
+    Проверяет username на запрещенные значения.
+    """
 
     def send_mail(self, username):
-        """Метод для отправки e-mail"""
-        user = get_object_or_404(models.User, username=username)
+        """
+        Метод send_mail отправляет confirmation_code на почту пользователя.
+        """
+        user = get_object_or_404(User, username=username)
         send_mail(
             'Добро пожаловать на YaMDB',
             f'Дорогой {username},\n'
@@ -27,7 +32,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, attrs):
-        """Проверка ввода недопустимого имени ("me") и уникальность полей"""
+        """Проверка ввода недопустимого имени ("me") и уникальность полей."""
         if attrs['username'] == 'me':
             raise serializers.ValidationError(
                 "Поле username не может быть 'me'."
@@ -39,11 +44,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return attrs
 
     class Meta:
-        model = models.User
+        model = User
         fields = ('email', 'username')
         validators = [
             UniqueTogetherValidator(
-                queryset=models.User.objects.all(),
+                queryset=User.objects.all(),
                 fields=('username', 'email')
             )
         ]
@@ -54,7 +59,7 @@ class CustomTokenObtainSerializer(serializers.ModelSerializer):
     Кастомный сериализатор формы предоставления данных для аутентификации.
     Валидация по "confirmation_code".
     """
-    username_field = models.User.USERNAME_FIELD
+    username_field = User.USERNAME_FIELD
 
     def __init__(self, *args, **kwargs):
         """Переопределяем поля в форме получения токена"""
@@ -70,25 +75,20 @@ class CustomTokenObtainSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         username = attrs['username']
         confirmation_code = attrs['confirmation_code']
-        if not models.User.objects.filter(username=username).exists():
-            raise Http404(
-                f'User {username} не существует',
-            )
-
-        user = get_object_or_404(models.User, username=username)
+        user = get_object_or_404(User, username=username)
         if confirmation_code != user.confirmation_code:
             raise serializers.ValidationError('Не правильно введены данные')
         return attrs
 
     class Meta:
-        model = models.User
+        model = User
         fields = ('confirmation_code', 'username', )
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Сериализатор для изменения данных пользователя"""
+    """Сериализатор для изменения данных пользователя."""
     class Meta:
-        model = models.User
+        model = User
         fields = (
             "username",
             "email",
@@ -165,10 +165,11 @@ class ReviewSerializer(serializers.ModelSerializer):
     title = serializers.HiddenField(default=TitleReadSerializer)
 
     def validate(self, attrs):
-        user = self.context['request'].user
-        title = self.context['request'].parser_context['kwargs']['title_id']
+        request = self.context['request']
+        user = request.user
+        title = request.parser_context['kwargs']['title_id']
         review = models.Review.objects.filter(title=title, author=user)
-        if review.exists():
+        if review.exists() and request.method == 'POST':
             raise serializers.ValidationError(
                 detail='Нельзя оставлять больше одного отзыва на произведение',
                 code=status.HTTP_400_BAD_REQUEST
@@ -189,7 +190,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField(read_only=True)
+    review = serializers.HiddenField(default=ReviewSerializer)
 
     class Meta:
         model = models.Comment
-        fields = ('id', 'text', 'author', 'pub_date')
+        fields = ('id', 'text', 'author', 'review', 'pub_date')

@@ -1,19 +1,17 @@
+import rest_framework.permissions as rest_permissions
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import (
-    viewsets, mixins, filters,
-    generics, response, status
-)
-from rest_framework.viewsets import ModelViewSet
+from rest_framework import (filters, generics, mixins, response, status,
+                            viewsets)
+from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from reviews import models
-from . import permissions
-from . import serializers
+from users.models import User
+
+from . import permissions, serializers
 from .filters import TitleFilter
-from rest_framework.decorators import action
-from django.db.models import Avg
 
 
 class CustomViewSet(
@@ -27,11 +25,11 @@ class CustomViewSet(
 
 class UserCreateViewSet(generics.CreateAPIView):
     """
-    Представление для создание пользователя. Имеет только POST запрос.
+    Представление для создания пользователя. Имеет только POST запрос.
     """
-    permission_classes = (AllowAny,)
+    permission_classes = (rest_permissions.AllowAny,)
     serializer_class = serializers.UserCreateSerializer
-    queryset = models.User.objects.all()
+    queryset = User.objects.all()
 
     def post(self, request, *args, **kwargs):
         serializer = serializers.UserCreateSerializer(data=request.data)
@@ -57,18 +55,18 @@ class UserCreateViewSet(generics.CreateAPIView):
 
 class CustomTokenObtain(generics.CreateAPIView):
     """
-    Представление для создание JWT токена. Имеет только POST запрос.
+    Представление для создания JWT токена. Имеет только POST запрос.
     """
-    permission_classes = (AllowAny,)
+    permission_classes = (rest_permissions.AllowAny,)
     serializer_class = serializers.CustomTokenObtainSerializer
-    queryset = models.User.objects.all()
+    queryset = User.objects.all()
 
     def post(self, request, *args, **kwargs):
         serializer = serializers.CustomTokenObtainSerializer(data=request.data)
 
         if serializer.is_valid():
             user = get_object_or_404(
-                models.User,
+                User,
                 username=serializer.data['username']
             )
 
@@ -87,10 +85,12 @@ class CustomTokenObtain(generics.CreateAPIView):
 
 class UserViewSet(viewsets.ModelViewSet):
     """
-    Вьюсет доступный только для администратора. Имеет все методы CRUD.
-    Можно фильтровать по полю username.
+    Вьюсет Пользователя.
+    Реализованы методы чтения, создания,
+    частичного обновления и удаления объектов.
+    Есть поиск по полю username.
     """
-    queryset = models.User.objects.all()
+    queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
     permission_classes = (permissions.AdminOnly,)
     lookup_field = "username"
@@ -104,11 +104,13 @@ class UserViewSet(viewsets.ModelViewSet):
         url_name="me",
         serializer_class=serializers.UserSerializer,
         permission_classes=(
-            IsAuthenticated,
+            rest_permissions.IsAuthenticated,
         ),
     )
     def me(self, request):
-        """Изменение данных своей учетной записи. Имеет GET, PATH запросы"""
+        """
+        Доступ пользователя к своей учетной записи по '/users/me/'.
+        """
         me_user = request.user
         serializer = self.get_serializer(me_user)
         if request.method == "PATCH":
@@ -124,8 +126,11 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class CategoryViewSet(CustomViewSet):
-    """Вью-класс Категории. Реализованы методы чтения,
-    создания и удаления объектов. Есть поиск по названию."""
+    """
+    Вьюсет Категории.
+    Реализованы методы чтения, создания и удаления объектов.
+    Есть поиск по названию.
+    """
     lookup_field = 'slug'
     queryset = models.Category.objects.all()
     serializer_class = serializers.CategorySerializer
@@ -136,8 +141,11 @@ class CategoryViewSet(CustomViewSet):
 
 
 class GenreViewSet(CustomViewSet):
-    """Вью-класс Жанры. Реализованы методы чтения,
-    создания и удаления объектов. Есть поиск по названию."""
+    """
+    Вьюсет Жанры.
+    Реализованы методы чтения, создания и удаления объектов.
+    Есть поиск по названию.
+    """
     lookup_field = 'slug'
     queryset = models.Genre.objects.all()
     serializer_class = serializers.GenreSerializer
@@ -148,14 +156,17 @@ class GenreViewSet(CustomViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    """Вью-класс Произведения. Реализованы методы чтения,
-    создания, частичного обновления и удаления объектов.
-    Есть фильтр по полям slug категории/жанра, названию, году."""
+    """
+    Вьюсет Произведения.
+    Реализованы методы чтения, создания,
+    частичного обновления и удаления объектов.
+    Есть фильтр по полям slug категории/жанра, названию, году.
+    """
     queryset = models.Title.objects.annotate(rating=Avg("reviews__score"))
     permission_classes = (permissions.AdminOrReadOnly, )
     pagination_class = LimitOffsetPagination
-    filter_backends = (DjangoFilterBackend,)
-    filterset_сlass = TitleFilter
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -163,14 +174,23 @@ class TitleViewSet(viewsets.ModelViewSet):
         return serializers.TitleWriteSerializer
 
 
-class ReviewViewSet(ModelViewSet):
-    queryset = models.Review.objects.all()
+class ReviewViewSet(viewsets.ModelViewSet):
+    """
+    Вьюсет Отзывы.
+    Реализованы методы чтения, создания,
+    частичного обновления и удаления объектов.
+    """
     serializer_class = serializers.ReviewSerializer
     pagination_class = LimitOffsetPagination
     permission_classes = (
-        permissions.AuthorOrReadOnly,
-        permissions.ModerOrReadOnly,
+        rest_permissions.IsAuthenticatedOrReadOnly,
+        permissions.AuthorOrReadOnly
     )
+
+    def get_queryset(self):
+        title_id = self.kwargs.get('title_id')
+        title = get_object_or_404(models.Title, pk=title_id)
+        return title.reviews.all()
 
     def perform_create(self, serializer):
         """
@@ -185,14 +205,24 @@ class ReviewViewSet(ModelViewSet):
         )
 
 
-class CommentViewSet(ModelViewSet):
+class CommentViewSet(viewsets.ModelViewSet):
+    """
+    Вьюсет Комментарии.
+    Реализованы методы чтения, создания,
+    частичного обновления и удаления объектов.
+    """
     queryset = models.Comment.objects.all()
     serializer_class = serializers.CommentSerializer
     pagination_class = LimitOffsetPagination
     permission_classes = (
-        permissions.AuthorOrReadOnly,
-        permissions.ModerOrReadOnly,
+        rest_permissions.IsAuthenticatedOrReadOnly,
+        permissions.AuthorOrReadOnly
     )
+
+    def get_queryset(self):
+        review_id = self.kwargs.get('review_id')
+        review = get_object_or_404(models.Review, pk=review_id)
+        return review.comments.all()
 
     def perform_create(self, serializer):
         """
