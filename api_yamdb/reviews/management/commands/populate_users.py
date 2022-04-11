@@ -54,7 +54,7 @@ class Command(BaseCommand):
         file_path = self.get_csv_file(filename)
         line_count = 0
         try:
-            with open(file_path) as csv_file:
+            with open(file_path, encoding='utf-8') as csv_file:
                 csv_reader = csv.reader(csv_file, delimiter=',')
                 self.clear_model()
                 for row in csv_reader:
