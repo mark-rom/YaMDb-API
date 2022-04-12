@@ -1,3 +1,4 @@
+from django.core.mail import send_mail
 import rest_framework.permissions as rest_permissions
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
@@ -9,7 +10,7 @@ from rest_framework.pagination import LimitOffsetPagination
 
 from reviews import models
 from users.models import User
-
+from django.conf import settings
 from . import permissions, serializers
 from .filters import TitleFilter
 
@@ -34,22 +35,28 @@ class UserCreateViewSet(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         serializer = serializers.UserCreateSerializer(data=request.data)
 
-        if serializer.is_valid():
-            serializer.save()
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        user = get_object_or_404(
+            User,
+            username=serializer.data['username']
+        )
 
-            serializer.send_mail(serializer.data['username'])
-
-            return response.Response(
-                data={
-                    'email': serializer.data['email'],
-                    'username': serializer.data['username']
-                },
-                status=status.HTTP_200_OK
-            )
+        send_mail(
+            'Добро пожаловать на YaMDB',
+            f'Дорогой {user.username},\n'
+            f'Ваш confirmation_code: {user.confirmation_code}',
+            settings.POST_EMAIL,
+            [f'{user.email}'],
+            fail_silently=False,
+        )
 
         return response.Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
+            data={
+                'email': serializer.data['email'],
+                'username': serializer.data['username']
+            },
+            status=status.HTTP_200_OK
         )
 
 
@@ -64,22 +71,17 @@ class CustomTokenObtain(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         serializer = serializers.CustomTokenObtainSerializer(data=request.data)
 
-        if serializer.is_valid():
-            user = get_object_or_404(
-                User,
-                username=serializer.data['username']
-            )
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(
+            User,
+            username=serializer.data['username']
+        )
 
-            token = serializer.get_token(user)
-
-            return response.Response(
-                {'token': f"{ token['access'] }"},
-                status=status.HTTP_200_OK
-            )
+        token = serializer.get_token(user)
 
         return response.Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
+            {'token': f"{ token['access'] }"},
+            status=status.HTTP_200_OK
         )
 
 
@@ -118,7 +120,12 @@ class UserViewSet(viewsets.ModelViewSet):
                 me_user, data=request.data, partial=True
             )
             serializer.is_valid(raise_exception=True)
-            serializer.save(email=me_user.email, role=me_user.role)
+            # if me_user.is_superuser or me_user.role == 'admin':
+            serializer.save()
+            # elif me_user.role == 'moderator':
+            #     serializer.save(email=me_user.email, role='moderator')
+            # else:
+            #     serializer.save(email=me_user.email, role='user')
             return response.Response(
                 serializer.data, status=status.HTTP_200_OK
             )
