@@ -14,7 +14,7 @@ from . import permissions, serializers
 from .filters import TitleFilter
 
 
-class CustomViewSet(
+class ListCreateDestroyViewSet(
         mixins.ListModelMixin,
         mixins.CreateModelMixin,
         mixins.DestroyModelMixin,
@@ -24,8 +24,7 @@ class CustomViewSet(
 
 
 class UserCreateViewSet(generics.CreateAPIView):
-    """
-    Представление для создания пользователя. Имеет только POST запрос.
+    """Представление для создания пользователя. Имеет только POST запрос.
     """
     permission_classes = (rest_permissions.AllowAny,)
     serializer_class = serializers.UserCreateSerializer
@@ -54,8 +53,7 @@ class UserCreateViewSet(generics.CreateAPIView):
 
 
 class CustomTokenObtain(generics.CreateAPIView):
-    """
-    Представление для создания JWT токена. Имеет только POST запрос.
+    """Представление для создания JWT токена. Имеет только POST запрос.
     """
     permission_classes = (rest_permissions.AllowAny,)
     serializer_class = serializers.CustomTokenObtainSerializer
@@ -84,8 +82,7 @@ class CustomTokenObtain(generics.CreateAPIView):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """
-    Вьюсет Пользователя.
+    """Вьюсет Пользователя.
     Реализованы методы чтения, создания,
     частичного обновления и удаления объектов.
     Есть поиск по полю username.
@@ -108,9 +105,7 @@ class UserViewSet(viewsets.ModelViewSet):
         ),
     )
     def me(self, request):
-        """
-        Доступ пользователя к своей учетной записи по '/users/me/'.
-        """
+        """Доступ пользователя к своей учетной записи по '/users/me/'."""
         me_user = request.user
         serializer = self.get_serializer(me_user)
         if request.method == "PATCH":
@@ -125,9 +120,8 @@ class UserViewSet(viewsets.ModelViewSet):
         return response.Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class CategoryViewSet(CustomViewSet):
-    """
-    Вьюсет Категории.
+class CategoryViewSet(ListCreateDestroyViewSet):
+    """Вьюсет Категории.
     Реализованы методы чтения, создания и удаления объектов.
     Есть поиск по названию.
     """
@@ -140,9 +134,8 @@ class CategoryViewSet(CustomViewSet):
     search_fields = ('name',)
 
 
-class GenreViewSet(CustomViewSet):
-    """
-    Вьюсет Жанры.
+class GenreViewSet(ListCreateDestroyViewSet):
+    """Вьюсет Жанры.
     Реализованы методы чтения, создания и удаления объектов.
     Есть поиск по названию.
     """
@@ -156,8 +149,7 @@ class GenreViewSet(CustomViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    """
-    Вьюсет Произведения.
+    """Вьюсет Произведения.
     Реализованы методы чтения, создания,
     частичного обновления и удаления объектов.
     Есть фильтр по полям slug категории/жанра, названию, году.
@@ -175,8 +167,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    """
-    Вьюсет Отзывы.
+    """Вьюсет Отзывы.
     Реализованы методы чтения, создания,
     частичного обновления и удаления объектов.
     """
@@ -206,8 +197,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    """
-    Вьюсет Комментарии.
+    """Вьюсет Комментарии.
     Реализованы методы чтения, создания,
     частичного обновления и удаления объектов.
     """

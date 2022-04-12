@@ -4,8 +4,7 @@ from reviews import models
 
 
 class TitleFilter(rest_framework.FilterSet):
-    """
-    Фильтр для Произведений.
+    """Фильтр для Произведений.
     Доступен фильтр по жанру, категории, названию и году.
     """
     genre = rest_framework.CharFilter(field_name='genre__slug')
