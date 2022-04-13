@@ -1,4 +1,6 @@
 import rest_framework.permissions as rest_permissions
+from django.conf import settings
+from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -33,22 +35,28 @@ class UserCreateViewSet(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         serializer = serializers.UserCreateSerializer(data=request.data)
 
-        if serializer.is_valid():
-            serializer.save()
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        user = get_object_or_404(
+            User,
+            username=serializer.data['username']
+        )
 
-            serializer.send_mail(serializer.data['username'])
-
-            return response.Response(
-                data={
-                    'email': serializer.data['email'],
-                    'username': serializer.data['username']
-                },
-                status=status.HTTP_200_OK
-            )
+        send_mail(
+            'Добро пожаловать на YaMDB',
+            f'Дорогой {user.username},\n'
+            f'Ваш confirmation_code: {user.confirmation_code}',
+            settings.POST_EMAIL,
+            [f'{user.email}'],
+            fail_silently=False,
+        )
 
         return response.Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
+            data={
+                'email': serializer.data['email'],
+                'username': serializer.data['username']
+            },
+            status=status.HTTP_200_OK
         )
 
 
@@ -62,22 +70,17 @@ class CustomTokenObtain(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         serializer = serializers.CustomTokenObtainSerializer(data=request.data)
 
-        if serializer.is_valid():
-            user = get_object_or_404(
-                User,
-                username=serializer.data['username']
-            )
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(
+            User,
+            username=serializer.data['username']
+        )
 
-            token = serializer.get_token(user)
-
-            return response.Response(
-                {'token': f"{ token['access'] }"},
-                status=status.HTTP_200_OK
-            )
+        token = serializer.get_token(user)
 
         return response.Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
+            {'token': f"{ token['access'] }"},
+            status=status.HTTP_200_OK
         )
 
 

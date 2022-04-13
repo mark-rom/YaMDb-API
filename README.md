@@ -1,5 +1,5 @@
-# api_yamdb
-# Описание:  
+## api_yamdb ##
+### Описание: ###
 
 Проект YaMDb (REST API) собирает отзывы пользователей на различные произведения.  
 Реализовано на `Djangorestframework 3.12.4` Аутентификация на основе `JWT`. Читать контент могут все, вносить и изменять только аутентифицированные пользователи.  
@@ -7,36 +7,38 @@
 Это первый совместный проект, было сложно но интересно. 
 
   
-# Установка:
+## Установка: ##
 
-Клонировать репозиторий и перейти в него в командной строке:  
-`git clone https://github.com/mark-rom/api_yamdb.git`  
-`cd api_yamdb`  
+### Клонируйте репозиторий: ###
+
+    git clone https://github.com/mark-rom/api_yamdb.git
+
+### Перейдите в репозиторий в командной строке: ###
+    cd api_yamdb
   
-Cоздать и активировать виртуальное окружение:  
-`python3.9 -m venv env`  
-`source env/bin/activate` - для Mac OS  
-`source venv/Scripts/activate` - для Windows OS  
+### Создайте и активируйте виртуальное окружение: ###
+    python3.9 -m venv env`
+для Mac OS
+    source env/bin/activate
+для Windows OS 
+    source venv/Scripts/activate
   
-Установить зависимости из файла requirements.txt:  
+### Установите зависимости из файла requirements.txt: ###
+Обновите pip:
+    python3 -m pip install --upgrade pip
+Установите зависимости:
+    pip install -r requirements.txt
   
-`python3 -m pip install --upgrade pip`  
-`pip install -r requirements.txt`  
+### Выполните миграции: ###
+    python3 manage.py migrate
   
-Выполнить миграции:  
+### Заполните базу данных из csv файлов: ###
+    python3 manage.py populate_db
   
-`python3 manage.py makemigrations`  
-`python3 manage.py migrate`  
+### Запустите проект: ###
+    python3 manage.py runserver
   
-Заполнить базу данных из csv файлов:  
-  
-`python3 manage.py populate_db`
-  
-Запустить проект:  
-  
-`python3 manage.py runserver`  
-  
-# Алгоритм регистрации пользователей
+## Алгоритм регистрации пользователей ##
   
 1. Пользователь отправляет POST-запрос на добавление нового пользователя с параметрами `email` и `username` на эндпоинт `/api/v1/auth/signup/`.  
 2. YaMDB отправляет письмо с кодом подтверждения `confirmation_code` на адрес `email`. В проекте реализован бэкенд почтового сервиса, папка - `sent_emails`.  

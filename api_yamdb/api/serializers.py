@@ -1,8 +1,6 @@
 from datetime import datetime
 
-from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-# from django.db.models import Avg
 from rest_framework import serializers, status
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -15,19 +13,15 @@ class UserCreateSerializer(serializers.ModelSerializer):
     """Сериализатор создания пользователя.
     Проверяет username на запрещенные значения.
     """
-
-    def send_mail(self, username):
-        """Метод send_mail отправляет confirmation_code на почту пользователя.
-        """
-        user = get_object_or_404(User, username=username)
-        send_mail(
-            'Добро пожаловать на YaMDB',
-            f'Дорогой {username},\n'
-            f'Ваш confirmation_code: {user.confirmation_code}',
-            'from@example.com',
-            [f'{user.email}'],
-            fail_silently=False,
-        )
+    class Meta:
+        model = User
+        fields = ('email', 'username')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=User.objects.all(),
+                fields=('username', 'email')
+            )
+        ]
 
     def validate(self, attrs):
         """Проверка ввода недопустимого имени ("me") и уникальность полей."""
@@ -41,28 +35,18 @@ class UserCreateSerializer(serializers.ModelSerializer):
             )
         return attrs
 
-    class Meta:
-        model = User
-        fields = ('email', 'username')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=User.objects.all(),
-                fields=('username', 'email')
-            )
-        ]
-
 
 class CustomTokenObtainSerializer(serializers.ModelSerializer):
     """Кастомный сериализатор формы предоставления данных для аутентификации.
     Валидация по "confirmation_code".
     """
     username_field = User.USERNAME_FIELD
+    username = serializers.CharField()
+    confirmation_code = serializers.CharField()
 
-    def __init__(self, *args, **kwargs):
-        """Переопределяем поля в форме получения токена"""
-        super(CustomTokenObtainSerializer, self).__init__(*args, **kwargs)
-        self.fields[self.username_field] = serializers.CharField()
-        self.fields["confirmation_code"] = serializers.CharField()
+    class Meta:
+        model = User
+        fields = ('confirmation_code', 'username', )
 
     def get_token(self, user):
         """Функция создания токена."""
@@ -77,13 +61,10 @@ class CustomTokenObtainSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Не правильно введены данные')
         return attrs
 
-    class Meta:
-        model = User
-        fields = ('confirmation_code', 'username', )
-
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для изменения данных пользователя."""
+
     class Meta:
         model = User
         fields = (
@@ -98,6 +79,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class CategorySerializer(serializers.ModelSerializer):
     """Сериализатор для чтения и изменения данных о категориях."""
+
     class Meta:
         model = models.Category
         fields = ('name', 'slug')
@@ -105,6 +87,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class GenreSerializer(serializers.ModelSerializer):
     """Сериализатор чтения и для изменения данных о жанрах."""
+
     class Meta:
         model = models.Genre
         fields = ('name', 'slug')
@@ -166,6 +149,17 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
     title = serializers.HiddenField(default=TitleReadSerializer)
 
+    class Meta:
+        model = models.Review
+        fields = ('id', 'text', 'author', 'title', 'score', 'pub_date')
+        validators = [
+            serializers.UniqueTogetherValidator(
+                queryset=models.Review.objects.all(),
+                fields=['title', 'author'],
+                message='вы уже оставляли отзыв'
+            )
+        ]
+
     def validate(self, attrs):
         request = self.context['request']
         user = request.user
@@ -177,17 +171,6 @@ class ReviewSerializer(serializers.ModelSerializer):
                 code=status.HTTP_400_BAD_REQUEST
             )
         return attrs
-
-    class Meta:
-        model = models.Review
-        fields = ('id', 'text', 'author', 'title', 'score', 'pub_date')
-        validators = [
-            serializers.UniqueTogetherValidator(
-                queryset=models.Review.objects.all(),
-                fields=['title', 'author'],
-                message='вы уже оставляли отзыв'
-            )
-        ]
 
 
 class CommentSerializer(serializers.ModelSerializer):
