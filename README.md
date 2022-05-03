@@ -1,4 +1,4 @@
-## api_yamdb ##
+## YaMDb API ##
 ### Описание: ###
 
 Проект YaMDb (REST API) собирает отзывы пользователей на различные произведения.  
@@ -10,25 +10,27 @@
 ## Установка: ##
 
 ### Клонируйте репозиторий: ###
-
     git clone https://github.com/mark-rom/api_yamdb.git
 
 ### Перейдите в репозиторий в командной строке: ###
     cd api_yamdb
   
 ### Создайте и активируйте виртуальное окружение: ###
-    python3.9 -m venv env`
-для Mac OS
+    python3.9 -m venv env
+
+###### для Mac OS
     source env/bin/activate
-для Windows OS 
+
+###### для Windows OS
     source venv/Scripts/activate
   
 ### Установите зависимости из файла requirements.txt: ###
-Обновите pip:
+### Обновите pip:
     python3 -m pip install --upgrade pip
-Установите зависимости:
+
+### Установите зависимости:
     pip install -r requirements.txt
-  
+
 ### Выполните миграции: ###
     python3 manage.py migrate
   
