@@ -10,10 +10,10 @@
 ## Установка: ##
 
 ### Клонируйте репозиторий: ###
-    git clone https://github.com/mark-rom/api_yamdb.git
+    git clone https://github.com/mark-rom/YaMDb-API.git
 
 ### Перейдите в репозиторий в командной строке: ###
-    cd api_yamdb
+    cd YaMDb-API
   
 ### Создайте и активируйте виртуальное окружение: ###
     python3.9 -m venv env
